@@ -8,6 +8,7 @@ from app.core.database import Base
 from app.models.user import User
 from app.models.problem import Problem
 from app.models.attempt import Attempt
+from app.models.topic import Topic
 from app.core.config import settings
 
 # this is the Alembic Config object, which provides
