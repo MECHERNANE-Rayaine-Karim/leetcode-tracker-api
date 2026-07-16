@@ -3,6 +3,11 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey, Enum as SQLAlchemyEnum
 from app.core.database import Base
 from enum import Enum
+from sqlalchemy.orm import relationship
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.problem import Problem
 
 class Status(Enum):
     SOLVED = "solved"
@@ -57,6 +62,7 @@ class Attempt(Base):
     time_complexity: Mapped[Complexity] = mapped_column(SQLAlchemyEnum(Complexity))
     space_complexity: Mapped[Complexity] = mapped_column(SQLAlchemyEnum(Complexity))
     status: Mapped[Status] = mapped_column(SQLAlchemyEnum(Status))
+    problem: Mapped["Problem"] = relationship(back_populates="attempts")
 
 
 
