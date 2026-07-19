@@ -1,10 +1,9 @@
 from fastapi import FastAPI
-from app.routers import user
-
+from app.routers import user, problem
 
 app = FastAPI()
 app.include_router(user.router, tags=["user"])
-
+app.include_router(problem.router, tags=["problem"])
 
 
 
