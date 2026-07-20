@@ -10,10 +10,20 @@ class AttemptAdd(BaseModel):
     space_complexity: Complexity
     status: Status
 
-class AttemptResponse(BaseModel):
+class AttemptDetails(BaseModel):
     id: int
     used_language: Language
     code_source: str
+    time_complexity: Complexity
+    space_complexity: Complexity
+    status: Status
+    attempted_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AttemptResponse(BaseModel):
+    id: int
+    used_language: Language
     time_complexity: Complexity
     space_complexity: Complexity
     status: Status
