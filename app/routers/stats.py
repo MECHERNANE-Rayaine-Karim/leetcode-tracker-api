@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from sqlalchemy import func, select, distinct
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -43,8 +45,26 @@ def get_statistics(db: Session = Depends(get_db),current_user: User = Depends(ge
         group_by(Attempt.used_language)
     ).all()
     attempts_by_language = {row[0]: row[1] for row in results}
-    current_streak = 0
-    longest_streak = 0
+    active_days = db.execute(
+        select(distinct(func.date(Attempt.attempted_at))).
+        join(Problem,Problem.id == Attempt.problem_id).
+        where(Problem.user_id == current_user.id).
+        order_by(func.date(Attempt.attempted_at))
+    ).scalars().all()
+
+    current_streak = 1
+    longest_streak = 1 if active_days else 0
+    for i in range( 0, len(active_days)-1):
+        if active_days[i+1] == active_days[i]+timedelta(days=1) :
+            current_streak += 1
+        else:
+            current_streak = 1
+        longest_streak = max(longest_streak, current_streak)
+    if not active_days:
+        current_streak = 0
+    elif active_days[-1] != date.today() and active_days[-1] != date.today()-timedelta(days=1):
+        current_streak = 0
+
 
     statistics = StatsResponse(
         total_problems_solved = total_problems_solved,
