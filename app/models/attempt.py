@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.problem import Problem
+    from app.models.note import Note
 
 class Status(Enum):
     SOLVED = "solved"
@@ -63,6 +64,7 @@ class Attempt(Base):
     space_complexity: Mapped[Complexity] = mapped_column(SQLAlchemyEnum(Complexity))
     status: Mapped[Status] = mapped_column(SQLAlchemyEnum(Status))
     problem: Mapped["Problem"] = relationship(back_populates="attempts")
+    notes: Mapped[list["Note"]] = relationship(back_populates="attempt")
 
 
 
