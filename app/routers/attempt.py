@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from app.services.security import get_current_user
 
-router = APIRouter(prefix="/problems/{problem_id}")
+router = APIRouter(prefix="/problems/{problem_id}",dependencies=[Depends(get_current_user)])
 
 
 @router.get("/attempts", response_model=list[AttemptResponse])
