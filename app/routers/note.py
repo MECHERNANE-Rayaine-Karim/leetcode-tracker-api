@@ -13,7 +13,7 @@ from sqlalchemy import select
 
 
 
-router = APIRouter(prefix="/notes")
+router = APIRouter(prefix="/notes",dependencies=[Depends(get_current_user)])
 
 
 @router.get("/getNotes", response_model=list[NoteResponse])

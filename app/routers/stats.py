@@ -11,7 +11,7 @@ from app.models.attempt import Status
 from app.schemas.stats import StatsResponse
 from app.services.security import get_current_user
 
-router = APIRouter(prefix="/stats")
+router = APIRouter(prefix="/stats",dependencies=[Depends(get_current_user)])
 
 @router.get("/", response_model=StatsResponse)
 def get_statistics(db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):

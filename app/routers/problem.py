@@ -11,7 +11,7 @@ from app.services.security import get_current_user
 from sqlalchemy import select
 
 
-router = APIRouter(prefix="/problems")
+router = APIRouter(prefix="/problems",dependencies=[Depends(get_current_user)])
 
 
 @router.get("/", response_model=list[ProblemResponse])

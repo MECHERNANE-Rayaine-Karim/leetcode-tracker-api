@@ -9,7 +9,7 @@ from app.schemas.topic import TopicResponse, TopicAdd
 from app.services.security import get_current_user
 from sqlalchemy import select, Row
 
-router = APIRouter(prefix="/topics")
+router = APIRouter(prefix="/topics",dependencies=[Depends(get_current_user)])
 
 
 
