@@ -3,7 +3,6 @@ from app.models.attempt import Language,Complexity,Status
 from datetime import datetime
 
 class AttemptAdd(BaseModel):
-    problem_id: int
     used_language: Language
     code_source: str
     time_complexity: Complexity
