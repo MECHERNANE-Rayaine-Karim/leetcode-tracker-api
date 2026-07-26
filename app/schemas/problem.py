@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+
 from app.models.problem import Difficulty
 
 class ProblemAdd(BaseModel):

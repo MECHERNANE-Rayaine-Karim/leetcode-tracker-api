@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import User
+from app.models import User, Topic
 from app.schemas.problem import ProblemAdd, ProblemResponse
 from app.models.problem import Problem
 from app.services.security import get_current_user
@@ -29,19 +29,42 @@ def problems_list(limit: int = Query(default=20, le=100),
 
 
 @router.post("/add", response_model=ProblemResponse)
-def create_problem(problem_data : ProblemAdd ,db: Session = Depends(get_db),
+def create_problem(problem_data : ProblemAdd ,topic_ids : list[int] = Query(default=[]),db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
-
+    topics = []
+    for topic_id in topic_ids :
+        topic = db.execute(select(Topic).where(Topic.id == topic_id)).scalar_one_or_none()
+        if topic is None:
+            raise HTTPException(status_code=404,detail="Topic not found")
+        topics.append(topic)
     new_problem = Problem(
         user_id = current_user.id,
         title = problem_data.title,
         url = problem_data.url,
         difficulty = problem_data.difficulty,
     )
+    new_problem.topics = topics
     db.add(new_problem)
     db.commit()
     db.refresh(new_problem)
     return new_problem
+
+
+@router.post("/{problem_id}/linkTopics",)
+def link_topic_problem(problem_id: int,topic_id: int ,db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
+    problem_check = db.execute(
+        select(Problem).
+        where(Problem.id == problem_id, Problem.user_id == current_user.id)
+    ).scalar_one_or_none()
+    if problem_check is None:
+        raise HTTPException(status_code=404,detail="Problem not found")
+    topic = db.execute(select(Topic).where(Topic.id==topic_id)).scalar_one_or_none()
+    if topic is None:
+        raise HTTPException(status_code=404,detail="Topic not found")
+    problem_check.topics.append(topic)
+    db.commit()
+    return {"message": "Topic linked to problem successfully"}
 
 
 

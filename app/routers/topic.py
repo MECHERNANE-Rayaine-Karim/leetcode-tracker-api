@@ -7,7 +7,7 @@ from app.schemas.problem import ProblemAdd, ProblemResponse
 from app.models.problem import Problem
 from app.schemas.topic import TopicResponse, TopicAdd
 from app.services.security import get_current_user
-from sqlalchemy import select, Row
+from sqlalchemy import select
 
 router = APIRouter(prefix="/topics",dependencies=[Depends(get_current_user)])
 
@@ -23,23 +23,6 @@ def add_topic(topic_data : TopicAdd ,db: Session = Depends(get_db),
     db.commit()
     db.refresh(new_topic)
     return new_topic
-
-
-@router.post("/linkProblemTopic",)
-def link_topic_problem(problem_id: int,topic_id: int ,db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)):
-    problem_check = db.execute(
-        select(Problem).
-        where(Problem.id == problem_id, Problem.user_id == current_user.id)
-    ).scalar_one_or_none()
-    if problem_check is None:
-        raise HTTPException(status_code=404,detail="Problem not found")
-    topic = db.execute(select(Topic).where(Topic.id==topic_id)).scalar_one_or_none()
-    if topic is None:
-        raise HTTPException(status_code=404,detail="Topic not found")
-    problem_check.topics.append(topic)
-    db.commit()
-    return {"message": "Topic linked to problem successfully"}
 
 
 @router.get("/getProblems", response_model= list[ProblemResponse])
