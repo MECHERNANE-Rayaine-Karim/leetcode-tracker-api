@@ -2,7 +2,6 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 class NoteAdd(BaseModel):
-    attempt_id: int
     content: str
 
 

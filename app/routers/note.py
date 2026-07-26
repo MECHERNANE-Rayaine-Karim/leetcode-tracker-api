@@ -13,37 +13,55 @@ from sqlalchemy import select
 
 
 
-router = APIRouter(prefix="/notes",dependencies=[Depends(get_current_user)])
+router = APIRouter(prefix="/problems/{problem_id}/attempts/{attempt_id}",dependencies=[Depends(get_current_user)])
 
 
 @router.get("/getNotes", response_model=list[NoteResponse])
-def notes_list( attempt_id: int ,limit: int = Query(default=20, le=100),
+def notes_list( attempt_id: int , problem_id: int,limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0), db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
 
     notes = db.execute(
         select(Note).join(Attempt,Note.attempt_id==Attempt.id).
         join(Problem,Problem.id==Attempt.problem_id).
-        where(Problem.user_id == current_user.id,Note.attempt_id == attempt_id).
+        where(Problem.user_id == current_user.id,Attempt.problem_id == problem_id,Note.attempt_id == attempt_id).
         limit(limit).offset(offset)
     ).scalars().all()
     return notes
 
 
+@router.patch("/notes/{note_id}", response_model=NoteResponse)
+def notes_edit( attempt_id: int , problem_id: int,note_id: int ,note_data: NoteAdd, db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
+
+    note = db.execute(
+        select(Note).join(Attempt,Note.attempt_id==Attempt.id).
+        join(Problem,Problem.id==Attempt.problem_id).
+        where(Problem.user_id == current_user.id,Problem.id == problem_id,Attempt.id == attempt_id,Note.id == note_id)
+    ).scalar_one_or_none()
+    if note is None:
+        raise HTTPException(status_code=404, detail="note  not found")
+    note.content = note_data.content
+    note.written_at = datetime.now()
+    db.commit()
+    db.refresh(note)
+    return note
+
+
 
 
 @router.post("/addNote", response_model=NoteResponse)
-def add_note( note_data: NoteAdd,db: Session = Depends(get_db),
+def add_note( attempt_id:int , problem_id: int ,note_data: NoteAdd,db: Session = Depends(get_db),
               current_user: User = Depends(get_current_user)):
     attempt = db.execute(
         select(Attempt).join(Problem,Attempt.problem_id==Problem.id).
-        where(Problem.user_id == current_user.id,Attempt.id == note_data.attempt_id)
+        where(Problem.user_id == current_user.id,Attempt.problem_id == problem_id,Attempt.id == attempt_id)
     ).scalar_one_or_none()
     if attempt is None:
         raise HTTPException(status_code=404, detail="attempt not found")
 
     new_note = Note(
-        attempt_id = note_data.attempt_id,
+        attempt_id =attempt_id,
         content = note_data.content,
         written_at = datetime.now()
     )
