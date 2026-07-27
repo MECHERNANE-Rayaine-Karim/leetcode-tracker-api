@@ -43,7 +43,7 @@ current_user: User = Depends(get_current_user)):
 
 
 
-@router.post("/addAttempts", response_model=AttemptDetails)
+@router.post("/attempts", response_model=AttemptDetails)
 def add_attempt(problem_id:int ,attempt_data : AttemptAdd,db: Session = Depends(get_db),
 current_user: User = Depends(get_current_user)):
     problem_check = db.execute(

@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict
 
 class NoteAdd(BaseModel):
@@ -10,3 +12,6 @@ class NoteResponse(BaseModel):
     content: str
     written_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
+class NoteEdit(BaseModel):
+    content: Optional[str] = None

@@ -3,10 +3,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, problem_topics
 from app.models import User, Topic
-from app.schemas.problem import ProblemAdd, ProblemResponse
+from app.schemas.problem import ProblemAdd, ProblemResponse, ProblemEdit
 from app.models.problem import Problem
+from app.schemas.topic import TopicResponse
 from app.services.security import get_current_user
 from sqlalchemy import select
 
@@ -28,7 +29,7 @@ def problems_list(limit: int = Query(default=20, le=100),
 
 
 
-@router.post("/add", response_model=ProblemResponse)
+@router.post("/", response_model=ProblemResponse)
 def create_problem(problem_data : ProblemAdd ,topic_ids : list[int] = Query(default=[]),db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
     topics = []
@@ -50,7 +51,7 @@ def create_problem(problem_data : ProblemAdd ,topic_ids : list[int] = Query(defa
     return new_problem
 
 
-@router.post("/{problem_id}/linkTopics",)
+@router.post("/{problem_id}/topics",)
 def link_topic_problem(problem_id: int,topic_id: int ,db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
     problem_check = db.execute(
@@ -66,6 +67,37 @@ def link_topic_problem(problem_id: int,topic_id: int ,db: Session = Depends(get_
     db.commit()
     return {"message": "Topic linked to problem successfully"}
 
+@router.get("/{problem_id}/topics", response_model= list[TopicResponse])
+def get_topics_by_problem(problem_id: int ,db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
 
+    problem = db.execute(select(Problem).where(Problem.id==problem_id,Problem.user_id == current_user.id)).scalar_one_or_none()
+    if problem is None:
+        raise HTTPException(status_code=404,detail="Problem not found")
+    topics = db.execute(
+        select(Topic).
+        join(problem_topics, problem_topics.c.topic_id == Topic.id ).
+        join(Problem, problem_topics.c.problem_id == Problem.id).
+        where(problem_topics.c.problem_id == problem_id,Problem.user_id == current_user.id)
+    ).scalars().all()
 
+    return topics
 
+@router.patch("/{problem_id}",response_model=ProblemResponse)
+def edit_problem( problem_id : int ,edited_data: ProblemEdit,db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
+    problem = db.execute(
+        select(Problem).
+        where(Problem.id == problem_id, Problem.user_id == current_user.id)
+    ).scalar_one_or_none()
+    if problem is None:
+        raise HTTPException(status_code=404,detail="Problem not found")
+    if edited_data.title is not None:
+        problem.title = edited_data.title
+    if edited_data.url is not None:
+        problem.url = edited_data.url
+    if edited_data.difficulty is not None:
+        problem.difficulty = edited_data.difficulty
+    db.commit()
+    db.refresh(problem)
+    return problem

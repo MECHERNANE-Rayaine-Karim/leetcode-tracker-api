@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import User, Note, Attempt
-from app.schemas.note import NoteResponse, NoteAdd
+from app.schemas.note import NoteResponse, NoteAdd, NoteEdit
 from app.models.problem import Problem
 from app.services.security import get_current_user
 from sqlalchemy import select
@@ -16,7 +16,7 @@ from sqlalchemy import select
 router = APIRouter(prefix="/problems/{problem_id}/attempts/{attempt_id}",dependencies=[Depends(get_current_user)])
 
 
-@router.get("/getNotes", response_model=list[NoteResponse])
+@router.get("/notes", response_model=list[NoteResponse])
 def notes_list( attempt_id: int , problem_id: int,limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0), db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
@@ -31,7 +31,7 @@ def notes_list( attempt_id: int , problem_id: int,limit: int = Query(default=20,
 
 
 @router.patch("/notes/{note_id}", response_model=NoteResponse)
-def notes_edit( attempt_id: int , problem_id: int,note_id: int ,note_data: NoteAdd, db: Session = Depends(get_db),
+def notes_edit( attempt_id: int , problem_id: int,note_id: int ,edited_data: NoteEdit, db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
 
     note = db.execute(
@@ -41,8 +41,9 @@ def notes_edit( attempt_id: int , problem_id: int,note_id: int ,note_data: NoteA
     ).scalar_one_or_none()
     if note is None:
         raise HTTPException(status_code=404, detail="note  not found")
-    note.content = note_data.content
-    note.written_at = datetime.now()
+    if edited_data.content is not None:
+        note.content = edited_data.content
+        note.written_at = datetime.now()
     db.commit()
     db.refresh(note)
     return note
@@ -50,7 +51,7 @@ def notes_edit( attempt_id: int , problem_id: int,note_id: int ,note_data: NoteA
 
 
 
-@router.post("/addNote", response_model=NoteResponse)
+@router.post("/notes", response_model=NoteResponse)
 def add_note( attempt_id:int , problem_id: int ,note_data: NoteAdd,db: Session = Depends(get_db),
               current_user: User = Depends(get_current_user)):
     attempt = db.execute(
