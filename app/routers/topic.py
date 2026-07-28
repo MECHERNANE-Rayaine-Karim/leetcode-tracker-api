@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.core.config import settings
 from app.core.database import get_db,problem_topics
 from app.models import User, Topic
-from app.schemas.problem import ProblemAdd, ProblemResponse
+from app.schemas.problem import ProblemResponse
 from app.models.problem import Problem
 from app.schemas.topic import TopicResponse, TopicAdd, TopicEdit
-from app.services.security import get_current_user
+from app.services.security import get_current_user, get_current_admin
 from sqlalchemy import select
 
 router = APIRouter(prefix="/topics",dependencies=[Depends(get_current_user)])
@@ -15,9 +14,7 @@ router = APIRouter(prefix="/topics",dependencies=[Depends(get_current_user)])
 
 @router.post("/", response_model=TopicResponse)
 def add_topic(topic_data : TopicAdd ,db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)):
-    if current_user.id != settings.admin_id:
-        raise HTTPException(status_code=403,detail="invalid permission")
+    current_user: User = Depends(get_current_admin)):
     new_topic = Topic(name=topic_data.name)
     db.add(new_topic)
     db.commit()
@@ -44,9 +41,7 @@ def get_problems_by_topic(topic_id: int ,db: Session = Depends(get_db),
 
 @router.patch("/{topic_id}", response_model=TopicResponse)
 def edit_topic( topic_id: int ,edited_data: TopicEdit, db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)):
-    if current_user.id != settings.admin_id:
-        raise HTTPException(status_code=403, detail="invalid permission")
+    current_user: User = Depends(get_current_admin)):
     topic = db.execute(select(Topic).where(Topic.id == topic_id)).scalar_one_or_none()
     if topic is None:
         raise HTTPException(status_code=404, detail="topic not found")
