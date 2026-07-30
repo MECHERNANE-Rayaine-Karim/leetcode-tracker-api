@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from starlette import status
+
 from app.core.database import get_db,problem_topics
 from app.models import User, Topic
 from app.schemas.problem import ProblemResponse
@@ -52,3 +54,13 @@ def edit_topic( topic_id: int ,edited_data: TopicEdit, db: Session = Depends(get
     return topic
 
 
+@router.delete("/{topic_id}",status_code=status.HTTP_204_NO_CONTENT)
+def delete_topic(topic_id: int , db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)):
+    topic = db.execute(select(Topic).where(Topic.id == topic_id)).scalar_one_or_none()
+    if topic is None:
+        raise HTTPException(status_code=404, detail="topic not found")
+    for problem in topic.problems:
+        problem.topics.remove(topic)
+    db.delete(topic)
+    db.commit()

@@ -2,9 +2,10 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from starlette import status
 
 from app.core.database import get_db
-from app.models import Attempt, User, Problem
+from app.models import Attempt, User, Problem, Note
 from app.schemas.attempt import AttemptResponse, AttemptDetails, AttemptAdd
 from sqlalchemy import select
 
@@ -64,6 +65,22 @@ current_user: User = Depends(get_current_user)):
     db.refresh(new_attempt)
     return new_attempt
 
-
-
-
+@router.delete("/attempts/{attempt_id}",status_code=status.HTTP_204_NO_CONTENT)
+def delete_attempt( problem_id: int ,attempt_id: int, db: Session = Depends(get_db),
+current_user: User = Depends(get_current_user)):
+    attempt = db.execute(
+        select(Attempt).
+        join(Problem, Attempt.problem_id == Problem.id).
+        where(Attempt.id == attempt_id, Problem.id == problem_id, Problem.user_id == current_user.id)
+    ).scalar_one_or_none()
+    if attempt is None:
+        raise HTTPException(status_code=404, detail="Attempt not found")
+    notes = db.execute(
+        select(Note).join(Attempt, Attempt.id == Note.attempt_id).
+        join(Problem, Attempt.problem_id == Problem.id).
+        where(Attempt.id == attempt_id, Problem.id == problem_id, Problem.user_id == current_user.id)
+    ).scalars().all()
+    if  notes:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This attempt has notes and cannot be deleted")
+    db.delete(attempt)
+    db.commit()

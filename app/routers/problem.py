@@ -2,9 +2,10 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from starlette import status
 
 from app.core.database import get_db, problem_topics
-from app.models import User, Topic
+from app.models import User, Topic, Attempt
 from app.schemas.problem import ProblemAdd, ProblemResponse, ProblemEdit
 from app.models.problem import Problem
 from app.schemas.topic import TopicResponse
@@ -101,3 +102,27 @@ def edit_problem( problem_id : int ,edited_data: ProblemEdit,db: Session = Depen
     db.commit()
     db.refresh(problem)
     return problem
+
+@router.delete("/{problem_id}",status_code=status.HTTP_204_NO_CONTENT)
+def delete_problem( problem_id : int ,db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
+    problem = db.execute(
+          select(Problem).
+           where( Problem.id == problem_id, Problem.user_id == current_user.id)
+    ).scalar_one_or_none()
+    if problem is None:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    attempts = db.execute(
+        select(Attempt).join(Problem,Problem.id == Attempt.problem_id).
+        where( Problem.id == problem_id, Problem.user_id == current_user.id)
+    ).scalars().all()
+    if attempts:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This problem has attempts and cannot be deleted")
+
+    for topic in problem.topics:
+        topic.problems.remove(problem)
+    db.delete(problem)
+    db.commit()
+
+
+

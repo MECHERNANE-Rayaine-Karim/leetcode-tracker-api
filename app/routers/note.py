@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from starlette import status
 
 from app.core.database import get_db
 from app.models import User, Note, Attempt
@@ -72,6 +73,18 @@ def add_note( attempt_id:int , problem_id: int ,note_data: NoteAdd,db: Session =
     return new_note
 
 
+@router.delete("/notes/{note_id}",status_code=status.HTTP_204_NO_CONTENT)
+def delete_note(attempt_id: int , problem_id: int,note_id: int , db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
 
+    note = db.execute(
+        select(Note).join(Attempt,Attempt.id == Note.attempt_id).
+        join(Problem,Problem.id == Attempt.problem_id).
+        where(Problem.user_id == current_user.id,Problem.id == problem_id,Attempt.id == attempt_id,Note.id == note_id)
+    ).scalar_one_or_none()
+    if note is None:
+        raise HTTPException(status_code=404, detail="note  not found")
+    db.delete(note)
+    db.commit()
 
 
