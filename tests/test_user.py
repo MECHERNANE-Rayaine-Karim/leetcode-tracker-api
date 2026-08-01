@@ -42,7 +42,7 @@ def test_login_user_fails_when_wrong_password(client):
                     "email": "user@gmail.com",
                     "password": "password"
                 }
-                )
+    )
     response = client.post("/users/login",
                 json={
                     "username": "user",
@@ -50,7 +50,7 @@ def test_login_user_fails_when_wrong_password(client):
                 }
     )
     assert response.status_code == 401
-    
+
 
 
 
