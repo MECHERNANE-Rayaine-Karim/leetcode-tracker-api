@@ -32,7 +32,7 @@ def notes_list( attempt_id: int , problem_id: int,limit: int = Query(default=20,
 
 
 @router.patch("/notes/{note_id}", response_model=NoteResponse)
-def notes_edit( attempt_id: int , problem_id: int,note_id: int ,edited_data: NoteEdit, db: Session = Depends(get_db),
+def edit_note( attempt_id: int , problem_id: int,note_id: int ,edited_data: NoteEdit, db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
 
     note = db.execute(
