@@ -14,7 +14,7 @@ router = APIRouter(prefix="/topics",dependencies=[Depends(get_current_user)])
 
 
 
-@router.post("/", response_model=TopicResponse)
+@router.post( "",response_model=TopicResponse)
 def add_topic(topic_data : TopicAdd ,db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin)):
     new_topic = Topic(name=topic_data.name)

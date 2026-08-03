@@ -7,7 +7,7 @@ import pytest
 
 def test_problems_list(client,authenticated_client):
     request = client.get(
-        "/problems/",
+        "/problems",
         params={"limit": 5, "offset": 0},
         headers= authenticated_client
     )
@@ -24,7 +24,7 @@ def test_problems_list(client,authenticated_client):
     )
     assert request.status_code == 200
     request = client.get(
-        "/problems/",
+        "/problems",
         params={"limit": 5, "offset": 0},
         headers=authenticated_client
     )
@@ -39,7 +39,7 @@ def test_problems_list(client,authenticated_client):
 
 def test_create_problem(client,authenticated_client):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -59,7 +59,7 @@ def test_create_problem(client,authenticated_client):
 
 def test_link_topic_problem(client,authenticated_admin):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -70,7 +70,7 @@ def test_link_topic_problem(client,authenticated_admin):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.post(
-        "/topics/",
+        "/topics",
         json={
             "name": "Arrays",
         },
@@ -94,7 +94,7 @@ def test_link_topic_problem(client,authenticated_admin):
 
 def test_get_topics_by_problem(client,authenticated_admin):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -105,7 +105,7 @@ def test_get_topics_by_problem(client,authenticated_admin):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.post(
-        "/topics/",
+        "/topics",
         json={
             "name": "Arrays",
         },
@@ -123,7 +123,7 @@ def test_get_topics_by_problem(client,authenticated_admin):
     assert request.status_code == 200
     assert request.json()["message"] == "Topic linked to problem successfully"
     request = client.post(
-        "/topics/",
+        "/topics",
         json={
             "name": "Maps",
         },
@@ -152,7 +152,7 @@ def test_get_topics_by_problem(client,authenticated_admin):
 
 def test_edit_problem(client,authenticated_client):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -165,7 +165,7 @@ def test_edit_problem(client,authenticated_client):
     assert request.json()["difficulty"] == "easy"
     problem_id = request.json()["id"]
     request = client.patch(
-        f"/problems/{problem_id}/",
+        f"/problems/{problem_id}",
         json={
             "title": "Two Sum 2",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -181,7 +181,7 @@ def test_edit_problem(client,authenticated_client):
 
 def test_delete_problem_with_no_attempts(client,authenticated_client):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -192,7 +192,7 @@ def test_delete_problem_with_no_attempts(client,authenticated_client):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.delete(
-        f"/problems/{problem_id}/",
+        f"/problems/{problem_id}",
         headers=authenticated_client
     )
     assert request.status_code == 204
@@ -200,7 +200,7 @@ def test_delete_problem_with_no_attempts(client,authenticated_client):
 
 def test_delete_problem_with_attempts(client,authenticated_client):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -211,7 +211,7 @@ def test_delete_problem_with_attempts(client,authenticated_client):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.post(
-        f"/problems/{problem_id}/attempts/",
+        f"/problems/{problem_id}/attempts",
         json={
             "used_language": "Python",
             "code_source": "just an example ......",
@@ -223,7 +223,7 @@ def test_delete_problem_with_attempts(client,authenticated_client):
     )
     assert request.status_code == 200
     request = client.delete(
-        f"/problems/{problem_id}/",
+        f"/problems/{problem_id}",
         headers=authenticated_client
     )
     assert request.status_code == 409

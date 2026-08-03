@@ -4,7 +4,7 @@ import pytest
 
 def test_add_topic(client,authenticated_admin):
     request = client.post(
-        "/topics/",
+        "/topics",
         json={
             "name": "Arrays",
         },
@@ -18,7 +18,7 @@ def test_add_topic(client,authenticated_admin):
 
 def test_get_problems_by_topic(client,authenticated_admin):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -29,7 +29,7 @@ def test_get_problems_by_topic(client,authenticated_admin):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.post(
-        "/topics/",
+        "/topics",
         json={
             "name": "Arrays",
         },
@@ -58,7 +58,7 @@ def test_get_problems_by_topic(client,authenticated_admin):
 
 def test_edit_topic(client,authenticated_admin):
     request = client.post(
-        "/topics/",
+        "/topics",
         json={
             "name": "Arrays",
         },
@@ -83,7 +83,7 @@ def test_edit_topic(client,authenticated_admin):
 
 def test_delete_topic_not_linked(client,authenticated_admin):
     request = client.post(
-        "/topics/",
+        "/topics",
         json={
             "name": "Arrays",
         },
@@ -93,14 +93,14 @@ def test_delete_topic_not_linked(client,authenticated_admin):
     assert request.json()["name"] == "Arrays"
     topic_id = request.json()["id"]
     request = client.delete(
-        f"topics/{topic_id}/",
+        f"topics/{topic_id}",
         headers=authenticated_admin
     )
     assert request.status_code == 204
 
 def test_delete_topic_linked_to_problems(client,authenticated_admin):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -111,7 +111,7 @@ def test_delete_topic_linked_to_problems(client,authenticated_admin):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.post(
-        "/topics/",
+        "/topics",
         json={
             "name": "Arrays",
         },

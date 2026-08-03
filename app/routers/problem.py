@@ -16,7 +16,7 @@ from sqlalchemy import select
 router = APIRouter(prefix="/problems",dependencies=[Depends(get_current_user)])
 
 
-@router.get("/", response_model=list[ProblemResponse])
+@router.get("", response_model=list[ProblemResponse])
 def problems_list(limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0), db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
@@ -30,7 +30,7 @@ def problems_list(limit: int = Query(default=20, le=100),
 
 
 
-@router.post("/", response_model=ProblemResponse)
+@router.post("", response_model=ProblemResponse)
 def create_problem(problem_data : ProblemAdd ,topic_ids : list[int] = Query(default=[]),db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
     topics = []

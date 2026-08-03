@@ -4,7 +4,7 @@ import pytest
 
 def test_add_note(client,authenticated_client):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -15,7 +15,7 @@ def test_add_note(client,authenticated_client):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.post(
-        f"/problems/{problem_id}/attempts/",
+        f"/problems/{problem_id}/attempts",
         json={
             "used_language": "Python",
             "code_source": "just an example ......",
@@ -42,7 +42,7 @@ def test_add_note(client,authenticated_client):
 
 def test_notes_list(client,authenticated_client):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -53,7 +53,7 @@ def test_notes_list(client,authenticated_client):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.post(
-        f"/problems/{problem_id}/attempts/",
+        f"/problems/{problem_id}/attempts",
         json={
             "used_language": "Python",
             "code_source": "just an example ......",
@@ -86,7 +86,7 @@ def test_notes_list(client,authenticated_client):
 
 def test_edit_note(client,authenticated_client):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -97,7 +97,7 @@ def test_edit_note(client,authenticated_client):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.post(
-        f"/problems/{problem_id}/attempts/",
+        f"/problems/{problem_id}/attempts",
         json={
             "used_language": "Python",
             "code_source": "just an example ......",
@@ -131,7 +131,7 @@ def test_edit_note(client,authenticated_client):
 
 def test_delete_note(client,authenticated_client):
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -142,7 +142,7 @@ def test_delete_note(client,authenticated_client):
     assert request.status_code == 200
     problem_id = request.json()["id"]
     request = client.post(
-        f"/problems/{problem_id}/attempts/",
+        f"/problems/{problem_id}/attempts",
         json={
             "used_language": "Python",
             "code_source": "just an example ......",
