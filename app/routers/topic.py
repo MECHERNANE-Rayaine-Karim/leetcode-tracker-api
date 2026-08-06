@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -13,6 +13,13 @@ from sqlalchemy import select
 router = APIRouter(prefix="/topics",dependencies=[Depends(get_current_user)])
 
 
+@router.get("",response_model=list[TopicResponse])
+def list_topics(limit: int = Query(default=20, le=100),
+    offset: int = Query(default=0, ge=0) ,db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
+
+    topics = db.execute(select(Topic).order_by(Topic.id).limit(limit).offset(offset)).scalars().all()
+    return topics
 
 @router.post( "",response_model=TopicResponse)
 def add_topic(topic_data : TopicAdd ,db: Session = Depends(get_db),
