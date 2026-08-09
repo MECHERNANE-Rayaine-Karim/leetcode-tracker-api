@@ -84,6 +84,26 @@ def get_topics_by_problem(problem_id: int ,db: Session = Depends(get_db),
 
     return topics
 
+@router.put("/{problem_id}/topics",response_model=list[TopicResponse])
+def sync_topics_problem(problem_id: int,topics_id: set[int] ,db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
+    problem_check = db.execute(
+        select(Problem).
+        where(Problem.id == problem_id, Problem.user_id == current_user.id)
+    ).scalar_one_or_none()
+    if problem_check is None:
+        raise HTTPException(status_code=404,detail="Problem not found")
+    topics_list = list()
+    for topic_id in topics_id:
+        topic = db.execute(select(Topic).where(Topic.id==topic_id)).scalar_one_or_none()
+        if topic is None:
+            raise HTTPException(status_code=404,detail="Topic not found")
+        topics_list.append(topic)
+    problem_check.topics = topics_list
+    db.commit()
+    return topics_list
+
+
 @router.patch("/{problem_id}",response_model=ProblemResponse)
 def edit_problem( problem_id : int ,edited_data: ProblemEdit,db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
