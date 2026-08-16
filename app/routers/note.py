@@ -31,6 +31,8 @@ def notes_list( attempt_id: int , problem_id: int,limit: int = Query(default=20,
     return notes
 
 
+
+
 @router.patch("/notes/{note_id}", response_model=NoteResponse)
 def edit_note( attempt_id: int , problem_id: int,note_id: int ,edited_data: NoteEdit, db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
@@ -42,11 +44,11 @@ def edit_note( attempt_id: int , problem_id: int,note_id: int ,edited_data: Note
     ).scalar_one_or_none()
     if note is None:
         raise HTTPException(status_code=404, detail="note  not found")
-    if edited_data.content is not None:
+    if edited_data.content is not None and edited_data.content != note.content :
         note.content = edited_data.content
         note.written_at = datetime.now()
-    db.commit()
-    db.refresh(note)
+        db.commit()
+        db.refresh(note)
     return note
 
 
