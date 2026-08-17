@@ -13,7 +13,7 @@ from app.services.security import get_current_user
 
 router = APIRouter(prefix="/stats",dependencies=[Depends(get_current_user)])
 
-@router.get("/", response_model=StatsResponse)
+@router.get("", response_model=StatsResponse)
 def get_statistics(db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):
     total_problems_solved = db.execute(
         select(func.count(distinct(Attempt.problem_id))).
@@ -22,10 +22,11 @@ def get_statistics(db: Session = Depends(get_db),current_user: User = Depends(ge
     ).scalar_one()
     results = db.execute(
         select(Problem.difficulty,func.count(distinct(Problem.id))).
-        where(Problem.user_id == current_user.id).
+        join(Attempt,Problem.id == Attempt.problem_id).
+        where(Problem.user_id == current_user.id,Attempt.status == Status.SOLVED).
         group_by(Problem.difficulty)
     ).all()
-    problems_by_difficulty = {row[0]: row[1] for row in results}
+    solved_problems_by_difficulty = {row[0]: row[1] for row in results}
     results = db.execute(
         select(Attempt.status, func.count(distinct(Attempt.id))).
         join(Problem, Problem.id == Attempt.problem_id).
@@ -68,7 +69,7 @@ def get_statistics(db: Session = Depends(get_db),current_user: User = Depends(ge
 
     statistics = StatsResponse(
         total_problems_solved = total_problems_solved,
-        problems_by_difficulty =  problems_by_difficulty,
+        solved_problems_by_difficulty =  solved_problems_by_difficulty,
         total_attempts = total_attempts,
         attempts_by_status = attempts_by_status,
         attempts_by_language =  attempts_by_language,

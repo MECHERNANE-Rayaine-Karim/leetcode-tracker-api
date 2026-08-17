@@ -5,7 +5,7 @@ from app.models.attempt import Status, Language
 
 class StatsResponse(BaseModel):
     total_problems_solved: int
-    problems_by_difficulty: dict[Difficulty, int]
+    solved_problems_by_difficulty: dict[Difficulty, int]
     total_attempts: int
     attempts_by_status: dict[Status, int]
     attempts_by_language: dict[Language, int]
