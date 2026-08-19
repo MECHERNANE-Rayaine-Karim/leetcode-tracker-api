@@ -11,7 +11,9 @@ from app.models.problem import Problem
 from app.models.attempt import Attempt
 from app.models.topic import Topic
 from app.models.note import Note
+from app.models.password_reset_token import PasswordResetToken
 from app.core.config import settings
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
