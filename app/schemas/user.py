@@ -15,3 +15,6 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+class PasswordResetRequest(BaseModel):
+    email: str
