@@ -8,7 +8,7 @@ from starlette import status
 
 from app.core.database import get_db
 from app.models.password_reset_token import PasswordResetToken
-from app.schemas.user import UserCreate, UserResponse, UserLogin, PasswordResetRequest
+from app.schemas.user import UserCreate, UserResponse, UserLogin, PasswordResetRequest, TokenRequest
 from app.models.user import User
 from app.services.security import hash_password, verify_password, create_access_token
 from sqlalchemy import select
@@ -46,7 +46,7 @@ def login_user(user_data : UserLogin,db: Session = Depends(get_db)):
 
 
 @router.post("/forgot_password")
-def forgot_password( data: PasswordResetRequest ,db: Session = Depends(get_db)):
+def forgot_password( data: TokenRequest ,db: Session = Depends(get_db)):
     user_id = db.execute(select(User.id).where(User.email == data.email)).scalar_one_or_none()
     if user_id:
         token = db.execute(
@@ -75,5 +75,23 @@ def forgot_password( data: PasswordResetRequest ,db: Session = Depends(get_db)):
         hashlib.sha256(secrets.token_urlsafe(32).encode()).hexdigest()
     return "token has been sent"
 
+
+@router.post("/reset_password")
+def reset_password( data: PasswordResetRequest ,db: Session = Depends(get_db)):
+    hashed_token = hashlib.sha256(data.raw_token.encode()).hexdigest()
+    password_reset = db.execute(select(PasswordResetToken).where(PasswordResetToken.hashed_token == hashed_token,PasswordResetToken.used_at.is_(None),PasswordResetToken.expires_at > datetime.now())).scalar_one_or_none()
+    if password_reset is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect token" )
+    user = db.execute(select(User).where(User.id == password_reset.user_id)).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.hashed_password = hash_password(data.new_password)
+    db.commit()
+    db.refresh(user)
+    password_reset.used_at = datetime.now()
+    db.commit()
+    db.refresh(password_reset)
+
+    return "password has been changed"
 
 
