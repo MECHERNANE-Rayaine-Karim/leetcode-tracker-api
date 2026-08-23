@@ -12,8 +12,11 @@ from app.schemas.user import UserCreate, UserResponse, UserLogin, PasswordResetR
 from app.models.user import User
 from app.services.security import hash_password, verify_password, create_access_token
 from sqlalchemy import select
+import resend
+from app.core.config import settings
 
 
+resend.api_key = settings.resend_api_key
 router = APIRouter(prefix="/users")
 
 
@@ -70,7 +73,12 @@ def forgot_password( data: TokenRequest ,db: Session = Depends(get_db)):
         db.add(new_password_reset_token)
         db.commit()
         db.refresh(new_password_reset_token)
-        print(f"Password reset link: http://localhost:5173/reset-password?token={raw_token}")
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": [data.email],
+            "subject": "Reset your password",
+            "html": f"<p>Click the link below to reset your password. This link expires in 30 minutes.</p><p><a href='http://localhost:5173/reset_password?token={raw_token}'>Reset Password</a></p>",
+        })
     if user_id is None:
         hashlib.sha256(secrets.token_urlsafe(32).encode()).hexdigest()
     return "token has been sent"
