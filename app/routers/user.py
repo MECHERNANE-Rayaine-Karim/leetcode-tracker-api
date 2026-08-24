@@ -43,7 +43,7 @@ def login_user(user_data : UserLogin,db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
     else:
         if verify_password(user_data.password, user.hashed_password):
-            return create_access_token({"sub": user_data.username})
+            return create_access_token({"sub": user.username,"role" : user.role.value})
         else:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
 
