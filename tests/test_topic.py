@@ -133,3 +133,46 @@ def test_delete_topic_linked_to_problems(client,authenticated_admin):
         headers=authenticated_admin
     )
     assert request.status_code == 204
+
+def test_sync_topics_problem(client, authenticated_admin):
+    request = client.post(
+        "/problems",
+        json={
+            "title": "Two Sum",
+            "url": "https://leetcode.com/problems/two-sum/",
+            "difficulty": "easy",
+        },
+        headers=authenticated_admin
+    )
+    assert request.status_code == 200
+    problem_id = request.json()["id"]
+    request = client.post(
+        "/topics",
+        json={
+            "name": "Arrays",
+        },
+        headers=authenticated_admin
+    )
+    assert request.status_code == 200
+    arrays_id = request.json()["id"]
+    link = client.post(
+        f"/problems/{problem_id}/topics",
+        params={"topic_id": arrays_id},
+        headers=authenticated_admin
+    )
+    assert link.status_code == 200
+    topic1 = client.post("/topics", json={"name": "Linked List"}, headers=authenticated_admin)
+    topic2 = client.post("/topics", json={"name": "Hash Table"}, headers=authenticated_admin)
+    assert topic1.status_code == 200
+    assert topic2.status_code == 200
+    topic1_id = topic1.json()["id"]
+    topic2_id = topic2.json()["id"]
+
+    request = client.put(
+        f"/problems/{problem_id}/topics",
+        json=[topic1_id, topic2_id],
+        headers=authenticated_admin
+    )
+    assert request.status_code == 200
+    returned_ids = {t["id"] for t in request.json()}
+    assert returned_ids == {topic1_id, topic2_id}
