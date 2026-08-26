@@ -14,6 +14,7 @@ from app.services.security import hash_password, verify_password, create_access_
 from sqlalchemy import select
 import resend
 from app.core.config import settings
+from sqlalchemy.exc import IntegrityError
 
 
 resend.api_key = settings.resend_api_key
@@ -23,15 +24,21 @@ router = APIRouter(prefix="/users")
 
 
 @router.post("/register", response_model=UserResponse)
-def register_user(user_data : UserCreate ,db: Session = Depends(get_db)):
-
+def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
     new_user = User(
-        username = user_data.username,
-        email = user_data.email,
-        hashed_password = hash_password(user_data.password)
+        username=user_data.username,
+        email=user_data.email,
+        hashed_password=hash_password(user_data.password)
     )
     db.add(new_user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username or email already registered"
+        )
     db.refresh(new_user)
     return new_user
 
