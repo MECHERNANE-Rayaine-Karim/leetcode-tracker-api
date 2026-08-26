@@ -7,16 +7,30 @@ from app.main import app
 from app.core.database import get_db
 from app.models.user import User, Role
 from sqlalchemy import select
+from sqlalchemy import event
+
 
 engine = create_engine(settings.test_database_url)
 testing_session = sessionmaker(bind=engine)
+
+
 
 @pytest.fixture
 def db_session():
     connection = engine.connect()
     transaction = connection.begin()
-    session = testing_session(bind = connection)
+    session = testing_session(bind=connection)
+
+    nested = connection.begin_nested()
+
+    @event.listens_for(session, "after_transaction_end")
+    def restart_savepoint(sess, trans):
+        nonlocal nested
+        if not nested.is_active:
+            nested = connection.begin_nested()
+
     yield session
+
     session.close()
     transaction.rollback()
     connection.close()
