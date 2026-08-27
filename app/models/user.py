@@ -23,6 +23,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[str] = mapped_column()
     email: Mapped[str] = mapped_column(unique=True)
+    email_verified: Mapped[bool] = mapped_column(default=False, server_default="false")
     role: Mapped[Role] = mapped_column(SQLAlchemyEnum(Role),default= Role.REGULAR,server_default="REGULAR")
     problems: Mapped[list["Problem"]] = relationship(back_populates="user")
 

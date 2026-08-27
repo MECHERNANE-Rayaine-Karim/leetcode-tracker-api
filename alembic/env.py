@@ -12,6 +12,7 @@ from app.models.attempt import Attempt
 from app.models.topic import Topic
 from app.models.note import Note
 from app.models.password_reset_token import PasswordResetToken
+from app.models.email_verification_token import EmailVerificationToken
 from app.core.config import settings
 
 

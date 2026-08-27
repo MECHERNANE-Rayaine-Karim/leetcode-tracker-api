@@ -1,10 +1,10 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class UserCreate(BaseModel):
     username: str
     password: str
-    email: str
+    email: EmailStr
 
 class UserResponse(BaseModel):
     id: int
@@ -17,8 +17,10 @@ class UserLogin(BaseModel):
     password: str
 
 class TokenRequest(BaseModel):
-    email: str
+    email: EmailStr
 
 class PasswordResetRequest(BaseModel):
     raw_token: str
     new_password: str
+class EmailVerificationRequest(BaseModel):
+    raw_token: str
