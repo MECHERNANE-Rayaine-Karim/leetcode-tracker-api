@@ -19,7 +19,7 @@ from sqlalchemy.exc import IntegrityError
 
 resend.api_key = settings.resend_api_key
 router = APIRouter(prefix="/users")
-
+_DUMMY_PASSWORD_HASH = hash_password(secrets.token_urlsafe(32))
 
 
 
@@ -47,6 +47,7 @@ def login_user(user_data : UserLogin,db: Session = Depends(get_db)):
 
     user = db.execute(select(User).where(User.username == user_data.username)).scalar_one_or_none()
     if user is None:
+        verify_password(user_data.password, _DUMMY_PASSWORD_HASH)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
     else:
         if verify_password(user_data.password, user.hashed_password):
@@ -93,7 +94,8 @@ def verify_email(data: EmailVerificationRequest, db: Session = Depends(get_db),c
     email_verification_token = db.execute(select(EmailVerificationToken).where(
         EmailVerificationToken.hashed_token == hashed_token,
         EmailVerificationToken.used_at.is_(None),
-        EmailVerificationToken.expires_at > datetime.now())).scalar_one_or_none()
+        EmailVerificationToken.expires_at > datetime.now(),
+        EmailVerificationToken.user_id == current_user.id)).scalar_one_or_none()
     if email_verification_token is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect token")
     current_user.email_verified = True
