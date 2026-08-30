@@ -94,8 +94,7 @@ def verify_email(data: EmailVerificationRequest, db: Session = Depends(get_db),c
     email_verification_token = db.execute(select(EmailVerificationToken).where(
         EmailVerificationToken.hashed_token == hashed_token,
         EmailVerificationToken.used_at.is_(None),
-        EmailVerificationToken.expires_at > datetime.now(),
-        EmailVerificationToken.user_id == current_user.id)).scalar_one_or_none()
+        EmailVerificationToken.expires_at > datetime.now(),EmailVerificationToken.user_id == current_user.id)).scalar_one_or_none()
     if email_verification_token is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect token")
     current_user.email_verified = True
