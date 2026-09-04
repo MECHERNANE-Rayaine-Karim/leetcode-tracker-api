@@ -1,6 +1,7 @@
 
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -65,7 +66,14 @@ def link_topic_problem(problem_id: int,topic_id: int ,db: Session = Depends(get_
     if topic is None:
         raise HTTPException(status_code=404,detail="Topic not found")
     problem_check.topics.append(topic)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="topic and problem already linked"
+        )
     return {"message": "Topic linked to problem successfully"}
 
 @router.get("/{problem_id}/topics", response_model= list[TopicResponse])
