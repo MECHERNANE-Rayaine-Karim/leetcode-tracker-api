@@ -14,7 +14,7 @@ def test_problems_list(client,authenticated_client):
     assert request.status_code == 200
     assert request.json() == []
     request = client.post(
-        "/problems/",
+        "/problems",
         json={
             "title": "Two Sum",
             "url": "https://leetcode.com/problems/two-sum/",
@@ -227,3 +227,43 @@ def test_delete_problem_with_attempts(client,authenticated_client):
         headers=authenticated_client
     )
     assert request.status_code == 409
+
+def test_delete_problem_rejects_other_users_problem(client, authenticated_client):
+    request = client.post(
+        "/problems",
+        json={
+            "title": "Two Sum",
+            "url": "https://leetcode.com/problems/two-sum/",
+            "difficulty": "easy",
+        },
+        headers=authenticated_client
+    )
+    problem_id = request.json()["id"]
+    client.post("/users/register",
+                json={
+                    "username": "other",
+                    "email": "other@gmail.com",
+                    "password": "password"
+                }
+    )
+    other_login = client.post(
+        "/users/login",
+        json={
+            "username": "other",
+            "password": "password"
+        }
+    )
+    other_headers = {"Authorization": f"Bearer {other_login.json()}"}
+
+    response = client.delete(f"/problems/{problem_id}", headers=other_headers)
+    assert response.status_code == 404
+    request = client.get(
+        "/problems",
+        params={"limit": 5, "offset": 0},
+        headers=authenticated_client
+    )
+    assert request.status_code == 200
+    data = request.json()
+    assert len(data) == 1
+
+
