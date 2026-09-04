@@ -176,3 +176,23 @@ def test_sync_topics_problem(client, authenticated_admin):
     assert request.status_code == 200
     returned_ids = {t["id"] for t in request.json()}
     assert returned_ids == {topic1_id, topic2_id}
+
+def test_delete_topic_rejects_regular_user(client, authenticated_admin,authenticated_client):
+    request = client.post(
+        "/topics",
+        json={
+            "name": "Arrays",
+        },
+        headers=authenticated_admin
+    )
+    assert request.status_code == 200
+    assert request.json()["name"] == "Arrays"
+    topic_id = request.json()["id"]
+    request = client.delete(
+        f"topics/{topic_id}",
+        headers=authenticated_client
+    )
+    assert request.status_code == 403
+    request = client.get("topics", headers=authenticated_client)
+    assert request.status_code == 200
+    assert any(t["id"] == topic_id for t in request.json())
